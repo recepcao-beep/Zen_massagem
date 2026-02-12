@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     `}>
       <div className="h-16 md:h-20 flex items-center justify-between px-6 border-b border-gray-100">
         <div className="flex items-center">
-            <Flower2 className="w-8 h-8 text-teal-600 mr-3" />
+            <img src="/logo.svg" alt="Logo" className="w-8 h-8 mr-3" />
             <span className="text-xl font-bold text-gray-800 tracking-tight">ZenControl</span>
         </div>
         {/* Mobile Close Button */}
