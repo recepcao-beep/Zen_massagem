@@ -253,6 +253,7 @@ const App: React.FC = () => {
             >
                 <Menu className="w-6 h-6" />
             </button>
+            <img src="/logo.svg" alt="Logo" className="w-6 h-6 mr-2" />
             <span className="ml-3 font-bold text-gray-800 text-lg">ZenControl</span>
         </div>
         <div className="text-xs font-medium text-teal-700 bg-teal-50 px-2 py-1 rounded">
