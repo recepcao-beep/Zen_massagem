@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState, UserRole } from '../types';
-import { LayoutDashboard, Calendar, FileText, Settings, Flower2, LogOut, CheckSquare, Clock, Cloud, CloudOff, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, Calendar, FileText, Settings, Flower2, LogOut, CheckSquare, Clock, Cloud, CloudOff, RefreshCw, CheckCircle2, X } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -10,9 +10,21 @@ interface SidebarProps {
   userName?: string;
   isGoogleConnected?: boolean;
   syncStatus?: 'idle' | 'syncing' | 'error' | 'success';
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, onLogout, userName, isGoogleConnected, syncStatus }) => {
+const Sidebar: React.FC<SidebarProps> = ({ 
+  currentView, 
+  onChangeView, 
+  userRole, 
+  onLogout, 
+  userName, 
+  isGoogleConnected, 
+  syncStatus,
+  isOpen = false,
+  onClose
+}) => {
   
   // Define items based on role
   let menuItems: { id: string, label: string, icon: any }[] = [];
@@ -53,10 +65,21 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, 
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen fixed left-0 top-0 flex flex-col z-20">
-      <div className="h-20 flex items-center px-6 border-b border-gray-100">
-        <Flower2 className="w-8 h-8 text-teal-600 mr-3" />
-        <span className="text-xl font-bold text-gray-800 tracking-tight">ZenControl</span>
+    <aside className={`
+        fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-40
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+    `}>
+      <div className="h-16 md:h-20 flex items-center justify-between px-6 border-b border-gray-100">
+        <div className="flex items-center">
+            <Flower2 className="w-8 h-8 text-teal-600 mr-3" />
+            <span className="text-xl font-bold text-gray-800 tracking-tight">ZenControl</span>
+        </div>
+        {/* Mobile Close Button */}
+        <button onClick={onClose} className="md:hidden text-gray-500 hover:text-gray-700">
+            <X className="w-6 h-6" />
+        </button>
       </div>
 
       {userName && (
@@ -66,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, 
         </div>
       )}
 
-      <nav className="flex-1 py-4 px-4 space-y-1">
+      <nav className="flex-1 py-4 px-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -103,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, userRole, 
          </div>
       </div>
 
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 pb-8 md:pb-4">
         <button 
             onClick={onLogout}
             className="w-full flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

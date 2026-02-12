@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Appointment, Hotel, MassageType, Masseur, PointOfSale } from '../types';
 import { MASSAGE_TYPES, HOTELS, POINTS_OF_SALE } from '../constants';
-import { X, Upload, Trash2 } from 'lucide-react';
+import { X, Upload, Trash2, MessageCircle } from 'lucide-react';
 import { addMinutes, format, parse, isSameDay } from 'date-fns';
 
 interface AppointmentModalProps {
@@ -115,6 +115,31 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
     return !masseur.unavailableWeekDays.includes(dayOfWeek);
   };
 
+  const sendWhatsAppMessage = () => {
+    if (!formData.phone || !formData.clientName || !formData.date || !formData.time) return;
+
+    // Limpar telefone (deixar apenas números)
+    let cleanPhone = formData.phone.replace(/\D/g, '');
+
+    // Se tiver 10 ou 11 dígitos, provavelmente é Brasil sem DDI, adiciona 55
+    if (cleanPhone.length >= 10 && cleanPhone.length <= 11) {
+        cleanPhone = '55' + cleanPhone;
+    }
+
+    if (cleanPhone.length < 10) return; // Número inválido provavelmente
+
+    const typeName = MASSAGE_TYPES.find(t => t.id === formData.massageTypeId)?.name || 'Massagem';
+    
+    // Formatar data de YYYY-MM-DD para DD/MM/YYYY
+    const [year, month, day] = formData.date.split('-');
+    const formattedDate = `${day}/${month}/${year}`;
+
+    const message = `Prezado(a) Sr(a). ${formData.clientName},\n\nConfirmamos o agendamento da sua ${typeName} para o dia ${formattedDate}, às ${formData.time}.\n\nO atendimento será realizado no apartamento 418.\n\nPermanecemos à disposição e desejamos que desfrute de um momento relaxante e revigorante.\n\nAtenciosamente,\nRecepção Vilage`;
+
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -134,21 +159,27 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
       return;
     }
 
+    // Salvar
     onSave({
       id: existingAppointment?.id || crypto.randomUUID(),
       createdAt: existingAppointment?.createdAt || new Date().toISOString(),
       status: existingAppointment?.status || 'pending',
       ...formData as Appointment
     });
+
+    // Se for um NOVO cadastro e tiver telefone, manda o WhatsApp
+    if (!existingAppointment && formData.phone) {
+        sendWhatsAppMessage();
+    }
   };
 
   const selectedMasseur = masseurs.find(m => m.id === formData.masseurId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-xl font-semibold text-gray-800">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black bg-opacity-50 p-0 md:p-4">
+      <div className="bg-white rounded-t-xl md:rounded-lg shadow-xl w-full md:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-4 md:p-6 border-b sticky top-0 bg-white z-10">
+          <h3 className="text-lg md:text-xl font-semibold text-gray-800">
             {existingAppointment ? 'Editar Agendamento' : 'Novo Agendamento'}
           </h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -156,7 +187,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
           {error && (
             <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm mb-4">
               {error}
@@ -176,17 +207,23 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Telefone / Contato</label>
-              <input
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black"
-                value={formData.phone}
-                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              />
+              <label className="block text-sm font-medium text-gray-700">Telefone / WhatsApp</label>
+              <div className="relative mt-1">
+                  <input
+                    type="text"
+                    className="block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black pr-10"
+                    placeholder="Ex: 11999999999"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <MessageCircle className="h-4 w-4 text-gray-400" />
+                  </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Apartamento *</label>
               <input
@@ -201,7 +238,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <label className="block text-sm font-medium text-gray-700">Hotel *</label>
               <select
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black"
+                className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black text-sm"
                 value={formData.hotel}
                 onChange={e => setFormData({ ...formData, hotel: e.target.value as Hotel })}
               >
@@ -243,7 +280,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <label className="block text-sm font-medium text-gray-700">Tipo *</label>
               <select
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black"
+                className="mt-1 block w-full rounded-md border-gray-300 border p-2 shadow-sm focus:border-teal-500 focus:ring-teal-500 bg-white text-black text-sm"
                 value={formData.massageTypeId}
                 onChange={e => setFormData({ ...formData, massageTypeId: e.target.value })}
               >
@@ -254,7 +291,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Data *</label>
               <input
@@ -283,7 +320,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
           <div>
              <label className="block text-sm font-medium text-gray-700 mb-2">Anexo (Guia/Foto)</label>
              <div className="flex items-center space-x-4">
-                <label className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                <label className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer w-full justify-center md:w-auto">
                   <Upload className="w-4 h-4 mr-2" />
                   Carregar Foto
                   <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
@@ -299,27 +336,27 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
              )}
           </div>
 
-          <div className="flex justify-end items-center pt-4 border-t space-x-3">
+          <div className="flex flex-col-reverse md:flex-row justify-end items-center pt-4 border-t gap-3 md:space-x-3">
+                <button
+                type="button"
+                onClick={onClose}
+                className="w-full md:w-auto px-4 py-3 md:py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                >
+                Cancelar
+                </button>
                 {existingAppointment && (
                 <button
                     type="button"
                     onClick={() => onDelete(existingAppointment.id)}
-                    className="px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center"
+                    className="w-full md:w-auto px-4 py-3 md:py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center justify-center"
                 >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Excluir
                 </button>
                 )}
                 <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                >
-                Cancelar
-                </button>
-                <button
                 type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 shadow-sm"
+                className="w-full md:w-auto px-4 py-3 md:py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 shadow-sm"
                 >
                 Salvar
                 </button>

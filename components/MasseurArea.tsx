@@ -57,10 +57,10 @@ const MasseurArea: React.FC<MasseurAreaProps> = ({
 
   if (currentView === 'masseur_availability') {
       return (
-        <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Minha Disponibilidade</h2>
+        <div className="max-w-2xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-100">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">Minha Disponibilidade</h2>
             <div className="space-y-6">
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Início do Turno</label>
                         <input 
@@ -89,13 +89,13 @@ const MasseurArea: React.FC<MasseurAreaProps> = ({
                                 key={day.id}
                                 type="button"
                                 onClick={() => toggleDay(day.id)}
-                                className={`text-sm px-3 py-2 rounded border ${
+                                className={`text-xs md:text-sm px-3 py-2 rounded border ${
                                     form.unavailableWeekDays?.includes(day.id)
                                     ? 'bg-red-100 text-red-700 border-red-200'
                                     : 'bg-white text-black border-gray-200 hover:bg-gray-50'
                                 }`}
                             >
-                                {day.label}
+                                {day.label.substring(0, 3)}
                             </button>
                         ))}
                     </div>
@@ -124,8 +124,8 @@ const MasseurArea: React.FC<MasseurAreaProps> = ({
   return (
     <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Minhas Tarefas</h2>
-            <div className="bg-teal-50 text-teal-700 px-4 py-2 rounded-full text-sm font-medium">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Minhas Tarefas</h2>
+            <div className="bg-teal-50 text-teal-700 px-4 py-2 rounded-full text-xs md:text-sm font-medium">
                 {pendingCount} pendentes
             </div>
         </div>
@@ -160,7 +160,7 @@ const MasseurArea: React.FC<MasseurAreaProps> = ({
 
                              <button 
                                 onClick={() => onUpdateStatus(appt.id, isDone ? 'pending' : 'done')}
-                                className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                                className={`w-full md:w-auto flex justify-center items-center px-4 py-3 md:py-2 rounded-lg font-medium transition-colors ${
                                     isDone 
                                     ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

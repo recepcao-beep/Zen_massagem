@@ -54,7 +54,7 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
       
       {/* SECTION: Configuração de Massagistas */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Configuração de Massagistas</h2>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">Configuração de Massagistas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Form */}
             <div className="md:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-fit">
@@ -114,7 +114,7 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
                     </div>
 
                     <div className="pt-2">
-                        <button type="submit" className="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">
+                        <button type="submit" className="w-full flex justify-center items-center px-4 py-3 bg-teal-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-teal-700">
                             {editingId ? 'Atualizar' : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
                         </button>
                         {editingId && (
@@ -138,7 +138,7 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
                     </div>
                 )}
                 {masseurs.map(m => (
-                    <div key={m.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center">
+                    <div key={m.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <div className="flex items-center space-x-4">
                             <div className="bg-teal-100 p-2 rounded-full">
                                 <User className="w-6 h-6 text-teal-600" />
@@ -153,16 +153,16 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
                                 </div>
                             </div>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 w-full md:w-auto justify-end">
                             <button 
                                 onClick={() => handleEdit(m)}
-                                className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                                className="px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100 flex-1 md:flex-none justify-center"
                             >
                                 Editar
                             </button>
                             <button 
                                 onClick={() => onDeleteMasseur(m.id)}
-                                className="p-2 text-red-500 hover:bg-red-50 rounded"
+                                className="p-2 text-red-500 hover:bg-red-50 rounded border border-red-100 md:border-none"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -177,13 +177,13 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
 
       {/* SECTION: Status da Nuvem */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center">
             Status do Sistema
         </h2>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-                <div className="bg-green-100 p-3 rounded-full mr-4">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex items-center w-full md:w-auto">
+                <div className="bg-green-100 p-3 rounded-full mr-4 flex-shrink-0">
                     <Database className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
@@ -193,8 +193,6 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
                     </h3>
                     <p className="text-sm text-gray-500">
                         O sistema está conectado nativamente à planilha do Google.
-                        <br/>
-                        Todas as alterações são salvas automaticamente.
                     </p>
                 </div>
             </div>
@@ -202,7 +200,7 @@ const Settings: React.FC<SettingsProps> = ({ masseurs, onSaveMasseur, onDeleteMa
             {onManualSync && (
                 <button 
                     onClick={onManualSync}
-                    className="flex items-center px-4 py-2 border border-teal-200 rounded-md shadow-sm text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100"
+                    className="w-full md:w-auto flex justify-center items-center px-4 py-3 md:py-2 border border-teal-200 rounded-md shadow-sm text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100"
                 >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Sincronizar Agora

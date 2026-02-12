@@ -15,6 +15,7 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { MASSAGE_TYPES } from './constants';
+import { Menu } from 'lucide-react';
 
 const App: React.FC = () => {
   // Auth State
@@ -25,8 +26,10 @@ const App: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [masseurs, setMasseurs] = useState<Masseur[]>([]);
   
+  // Mobile Menu State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   // API State
-  // We assume connected because URL is hardcoded
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'success'>('idle');
   
   // Modal State
@@ -50,8 +53,6 @@ const App: React.FC = () => {
     
     loadFromSheets()
         .then(data => {
-            // Mirror logic: Sheet overwrites local if data exists
-            // We only overwrite if the sheet has data, to prevent accidental wiping if sheet is blank but local is full
             if (data.appointments.length > 0 || data.masseurs.length > 0) {
                 setAppointments(data.appointments);
                 setMasseurs(data.masseurs);
@@ -102,6 +103,13 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
       setCurrentUser(null);
+      setIsMobileMenuOpen(false);
+  };
+
+  // --- View Navigation Wrapper ---
+  const handleChangeView = (view: ViewState) => {
+      setCurrentView(view);
+      setIsMobileMenuOpen(false); // Close mobile menu on navigation
   };
 
   // --- Monthly Cleanup Logic ---
@@ -176,7 +184,6 @@ const App: React.FC = () => {
     storage.saveAppointment(appt);
     const updatedList = storage.getAppointments();
     setAppointments(updatedList);
-    // Use updatedList explicitly to avoid state race conditions
     triggerSheetSync(updatedList, masseurs);
     setIsModalOpen(false);
     setEditingAppointment(null);
@@ -187,10 +194,7 @@ const App: React.FC = () => {
       storage.deleteAppointment(id);
       const updatedList = storage.getAppointments();
       setAppointments(updatedList);
-      
-      // CRITICAL: Send the updatedList (without the deleted item) to sheets
       triggerSheetSync(updatedList, masseurs);
-      
       setIsModalOpen(false);
       setEditingAppointment(null);
     }
@@ -219,7 +223,6 @@ const App: React.FC = () => {
     storage.saveMasseur(m);
     const updatedMasseurs = storage.getMasseurs();
     setMasseurs(updatedMasseurs);
-    // Use storage.getAppointments() to ensure we have the latest appointments regardless of closure staleness
     triggerSheetSync(storage.getAppointments(), updatedMasseurs);
   };
 
@@ -228,7 +231,6 @@ const App: React.FC = () => {
       storage.deleteMasseur(id);
       const updatedMasseurs = storage.getMasseurs();
       setMasseurs(updatedMasseurs);
-      // Use storage.getAppointments() to ensure we sync everything correctly
       triggerSheetSync(storage.getAppointments(), updatedMasseurs);
     }
   };
@@ -240,21 +242,49 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex bg-gray-50 min-h-screen">
+    <div className="flex bg-gray-50 min-h-screen relative">
+      
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-20 flex items-center px-4 justify-between shadow-sm">
+        <div className="flex items-center">
+            <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-md"
+            >
+                <Menu className="w-6 h-6" />
+            </button>
+            <span className="ml-3 font-bold text-gray-800 text-lg">ZenControl</span>
+        </div>
+        <div className="text-xs font-medium text-teal-700 bg-teal-50 px-2 py-1 rounded">
+            {currentUser.name.split(' ')[0]}
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+      )}
+
+      {/* Sidebar */}
       <Sidebar 
         currentView={currentView} 
-        onChangeView={setCurrentView} 
+        onChangeView={handleChangeView} 
         userRole={currentUser.role}
         onLogout={handleLogout}
         userName={currentUser.name}
-        isGoogleConnected={true} // Always true now
+        isGoogleConnected={true} 
         syncStatus={syncStatus}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
       
-      <main className="ml-64 flex-1 p-8">
+      {/* Main Content */}
+      <main className="flex-1 p-4 md:p-8 md:ml-64 mt-16 md:mt-0 transition-all duration-300">
         
         {currentUser.role === 'masseur' ? (
-            // Masseur Specific View
             currentUser.id ? (
                 <MasseurArea 
                     currentView={currentView}
@@ -268,7 +298,6 @@ const App: React.FC = () => {
                 <div>Erro: ID da massagista não encontrado. Faça login novamente.</div>
             )
         ) : (
-            // Admin & Receptionist Views
             <>
                 {currentView === 'dashboard' && <Dashboard appointments={appointments} />}
                 
@@ -310,7 +339,7 @@ const App: React.FC = () => {
 
       {/* Monthly Cleanup Modals */}
       {showCleanupPrompt && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70 px-4">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Limpeza Mensal Automática</h3>
             <p className="text-gray-600 mb-6">
@@ -337,7 +366,7 @@ const App: React.FC = () => {
       )}
 
       {showCleanupConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-70 px-4">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border-l-4 border-red-500">
             <h3 className="text-lg font-bold text-red-600 mb-2">Atenção!</h3>
             <p className="text-gray-600 mb-6">
